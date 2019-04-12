@@ -1,0 +1,239 @@
+NAME    PRINTGOOD
+;子模块 PRINTGOOD
+;功能：输出全部商品信息
+;输入：DL表示排序方式，0表示按存储顺序输出，1表示按推荐度输出
+;输出：无
+;用到的寄存器：BX,DX,AX,CX，SI,DI
+.386
+    PUBLIC  PRINTGOOD
+    INCLUDE LMACRO.LIB
+    EXTRN   GA1:BYTE,S1:SORTC,F2T10:FAR
+DATA   SEGMENT USE16   PARA    PUBLIC  'DATA'
+    TABLEOUT    DB  0AH,0DH,'RANK',9H,'NAME',9H,9H,'RECOM',9H,'JHJ',9H,'XSJ',9H,'JHSL',9H,'YSSL$'
+DATA   ENDS
+CODE    SEGMENT USE16   PARA    PUBLIC  'CODE'
+    ASSUME  CS:CODE,DS:DATA
+PRINTGOOD   PROC
+    PUSH    BX
+    PUSH    AX
+    PUSH    CX
+    PUSH    SI
+    PUSH    DI
+    ;输出表格头
+    PUSH    DX
+    WRITE   TABLEOUT
+    POP     DX
+    CMP DL,0
+    JZ  OUTPUTCUNCHU
+    JMP OUTPUTRECOM
+OUTPUTCUNCHU:
+   ;按存储的顺序输出
+    ;找在结构体中的第一个商品的rank
+    MOV DL,0AH
+    MOV AH,2
+    INT 21H
+    MOV DL,0DH
+    MOV AH,2
+    INT 21H;输出换行
+    MOV CX,0;存储输出第几个商品
+PBLOP1:    MOV DI,0
+PLOP1:    CMP CX,S1.SORT[DI]
+    JZ  PNEXT1
+    ADD DI,2
+    JMP PLOP1
+PNEXT1:
+    ;输出rank
+    MOV DX,0
+    MOV AX,DI
+    MOV DI,2
+    DIV DI
+    INC AX
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    ;输出商品名
+    MOV BX,CX
+    IMUL    BX,21
+    MOV DI,0
+    PUSH    CX
+    MOV CX,10
+PLOP3:    MOV DL,GA1[BX+DI]
+    CMP DL,0
+    JNZ PNEXT3
+    MOV DL,32
+PNEXT3:    MOV AH,2
+    INT 21H
+    INC DI
+    LOOP PLOP3
+    POP CX
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    ;输出商品的推荐度等
+    MOV BX,CX
+    IMUL    BX,21
+    MOV SI,19
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV BX,CX
+    IMUL    BX,21
+    MOV SI,11
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV BX,CX
+    IMUL    BX,21
+    MOV SI,13
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV BX,CX
+    IMUL    BX,21
+    MOV SI,15
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV BX,CX
+    IMUL    BX,21
+    MOV SI,17
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,0AH
+    MOV AH,2
+    INT 21H
+    MOV DL,0DH
+    MOV AH,2
+    INT 21H
+    INC CX
+    CMP CX,N
+    JZ PQUIT
+    JMP PBLOP1
+OUTPUTRECOM:
+    MOV DL,0AH
+    MOV AH,2
+    INT 21H
+    MOV DL,0DH
+    MOV AH,2
+    INT 21H;输出换行
+    MOV CX,0;从rank第一的开始输出
+PBLOP2:
+    MOV AX,CX
+    INC AX
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV DI,CX
+    IMUL    DI,2
+    MOV DI,S1.SORT[DI]
+    MOV BX,DI
+    IMUL    BX,21
+    MOV DI,0
+    PUSH    CX
+    MOV CX,10
+PLOP2:    MOV DL,GA1[BX+DI]
+    CMP DL,0
+    JNZ PNEXT2
+    MOV DL,32
+PNEXT2:    MOV AH,2
+    INT 21H
+    INC DI
+    LOOP PLOP2
+    POP CX
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV DI,CX
+    IMUL    DI,2
+    MOV DI,S1.SORT[DI]
+    MOV BX,DI
+    IMUL    BX,21
+    MOV SI,19
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV DI,CX
+    IMUL    DI,2
+    MOV DI,S1.SORT[DI]
+    MOV BX,DI
+    IMUL    BX,21
+    MOV SI,11
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV DI,CX
+    IMUL    DI,2
+    MOV DI,S1.SORT[DI]
+    MOV BX,DI
+    IMUL    BX,21
+    MOV SI,13
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV DI,CX
+    IMUL    DI,2
+    MOV DI,S1.SORT[DI]
+    MOV BX,DI
+    IMUL    BX,21
+    MOV SI,15
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,9
+    MOV AH,2
+    INT 21H
+    MOV DI,CX
+    IMUL    DI,2
+    MOV DI,S1.SORT[DI]
+    MOV BX,DI
+    IMUL    BX,21
+    MOV SI,17
+    MOV AX,WORD PTR GA1[BX+SI]
+    MOV DX,16
+    CALL    FAR PTR F2T10
+    MOV DL,0AH
+    MOV AH,2
+    INT 21H
+    MOV DL,0DH
+    MOV AH,2
+    INT 21H
+    INC CX
+    CMP CX,N
+    JZ  PQUIT
+    JMP PBLOP2
+PQUIT:
+    POP    DI
+    POP    SI
+    POP    CX
+    POP    AX
+    POP    BX
+    RET
+PRINTGOOD   ENDP
+CODE    ENDS
+    END
